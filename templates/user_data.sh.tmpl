@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Install dependencies
+apt-get update
+apt-get install -y git curl docker.io
+
+# Install Docker Compose v2 plugin
+mkdir -p ~/.docker/cli-plugins
+curl -SL https://github.com/docker/compose/releases/download/v2.24.2/docker-compose-linux-x86_64 \
+  -o ~/.docker/cli-plugins/docker-compose
+chmod +x ~/.docker/cli-plugins/docker-compose
+sudo mkdir -p /usr/local/lib/docker/cli-plugins
+sudo mv ~/.docker/cli-plugins/docker-compose /usr/local/lib/docker/cli-plugins/docker-compose
+
+# Enable and start Docker
+systemctl enable docker
+systemctl start docker
+
+# Clone the n8n AI starter repo
+cd /opt
+git clone https://github.com/n8n-io/self-hosted-ai-starter-kit.git n8n
+cd n8n
+
+# Create the .env file from Terraform template
+cat <<EOT > .env
+${env_file}
+EOT
+
+# Start n8n using the 'cpu' profile
+docker compose --profile cpu up -d
